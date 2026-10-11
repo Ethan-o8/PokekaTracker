@@ -3,54 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Poke-Stock Tracker | 실시간 포켓몬 카드 재고 추적기</title>
-  
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="수집가들을 위한 오프라인 매장(공인샵, 자판기, 편의점, 마트) 포켓몬 카드 재고 확인 대시보드. 지역명으로 매장을 검색하고 실시간 재고를 확인하세요.">
-  <meta name="keywords" content="포켓몬카드, 포카 재고, 자판기, 공인샵, 편의점, 대형마트, 실시간 재고, TCG">
-  <meta name="author" content="Poke-Stock">
-  
-  <!-- Tailwind CSS CDN -->
+  <title>Poke-Stock Tracker | 전국 포켓몬 카드 실시간 재고 조회</title>
+  <meta name="description" content="전국 오프라인 매장(공인샵, 자판기, 편의점, 대형마트)의 포켓몬 카드 실시간 재고 현황을 한눈에 확인하세요.">
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Tailwind Configuration -->
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            pokeRed: '#F05030', // 조금 더 밝고 경쾌한 레드
-            bgDark: '#1E2336',  // 다크모드 메인 배경색
-            cardDark: '#262D47', // 다크모드 카드 배경색
-          }
-        }
-      }
-    }
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { pokeRed: '#F05030', bgDark: '#1E2336', cardDark: '#262D47' } } } }
   </script>
-
-  <!-- Google Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  
   <style>
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-    
     body { transition: background-color 0.3s, color 0.3s; }
-
-    /* Category Button Active State */
-    .btn-category.active {
-      border-color: #F05030;
-      color: #F05030;
-      background-color: rgba(240, 80, 48, 0.1);
-    }
+    .btn-category.active { border-color: #F05030; color: #F05030; background-color: rgba(240, 80, 48, 0.1); }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-bgDark dark:text-gray-100 font-sans antialiased pb-24 min-h-screen">
+<body class="bg-gray-50 text-gray-800 dark:bg-bgDark dark:text-gray-100 font-sans antialiased pb-24 min-h-screen flex flex-col">
 
-  <!-- Header -->
   <header class="bg-pokeRed text-white sticky top-0 z-40 shadow-md">
     <div class="max-w-screen-md mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
@@ -61,8 +30,6 @@
         </div>
         <h1 class="text-xl font-bold tracking-tight">Poke-Stock</h1>
       </div>
-      
-      <!-- Theme Toggle -->
       <button id="theme-toggle" class="p-2 rounded-full hover:bg-white/20 transition">
         <span class="material-icons text-xl block dark:hidden">dark_mode</span>
         <span class="material-icons text-xl hidden dark:block">light_mode</span>
@@ -70,10 +37,8 @@
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-screen-md mx-auto px-4 mt-6 space-y-6">
+  <main class="max-w-screen-md mx-auto px-4 mt-6 space-y-6 flex-grow">
     
-    <!-- Filter Section -->
     <section aria-label="매장 카테고리 필터" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="category-filters">
       <button data-category="all" class="btn-category active flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-semibold shadow-sm transition">전체보기</button>
       <button data-category="편의점" class="btn-category flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition">🏪 편의점</button>
@@ -82,171 +47,111 @@
       <button data-category="대형마트" class="btn-category flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition">🛒 대형마트</button>
     </section>
 
-    <!-- Search Section -->
     <section aria-label="검색">
       <div class="relative">
         <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-        <input type="text" id="search-input" placeholder="지역명 또는 매장명 검색 (예: 용산, GS25)..." class="w-full bg-white dark:bg-cardDark border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white transition">
+        <input type="text" id="search-input" placeholder="지역명 또는 매장명 검색 (예: 부천, 인천공항)..." class="w-full bg-white dark:bg-cardDark border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white transition">
       </div>
     </section>
 
-    <!-- Stock List Section -->
     <section aria-label="재고 현황 리스트" class="space-y-4">
       <div class="flex justify-between items-end mb-2">
-        <h2 class="text-lg font-bold">실시간 현황</h2>
-        <span class="text-xs text-gray-500">최근 업데이트 순</span>
-      </div>
-
-      <div id="store-list" class="space-y-4">
-        <!-- List will be populated by JavaScript -->
+        <h2 class="text-lg font-bold">실시간 전국 현황</h2>
+        <span class="text-xs text-gray-500"><span id="result-count">0</span>개 매장 검색됨</span>
       </div>
       
-      <!-- No Results Message -->
-      <div id="no-results" class="hidden text-center py-10 text-gray-500 dark:text-gray-400">
-        검색 결과가 없습니다.
+      <!-- 로딩 인디케이터 -->
+      <div id="loading-spinner" class="text-center py-12 text-gray-500">
+        데이터를 불러오는 중입니다...
+      </div>
+
+      <div id="store-list" class="space-y-4"></div>
+      
+      <div id="no-results" class="hidden text-center py-12 bg-white dark:bg-cardDark rounded-2xl border border-gray-100 dark:border-gray-700">
+        <span class="material-icons text-4xl text-gray-300 dark:text-gray-600 mb-2">search_off</span>
+        <p class="text-gray-500 dark:text-gray-400">검색 결과가 없습니다.</p>
       </div>
     </section>
 
     <div class="py-6 border-b border-gray-200 dark:border-gray-700"></div>
 
-    <!-- AdSense & SEO Content Sections -->
-    <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">info</span> 서비스 안내</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-        Poke-Stock Tracker는 흩어져 있는 오프라인 매장(공인샵, 자판기, 편의점 등)의 포켓몬 카드 재고 데이터를 수집하여 한눈에 보여주는 대시보드입니다. 상단 필터와 검색 기능을 통해 원하는 지역의 매장을 빠르게 확인하세요.
-      </p>
-    </section>
-
-    <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
-      <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">gavel</span> 이용 주의사항</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-        본 사이트에서 제공하는 데이터는 참고용이며, 실제 매장 방문 시점의 재고와 차이가 있을 수 있습니다. 정확한 재고는 방문 전 해당 매장에 문의하시는 것을 권장합니다.
-      </p>
-    </section>
-
+    <!-- 하단 설명 섹션 (생략 없이 유지) -->
+    <article class="space-y-4">
+      <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <h2 class="text-base font-bold mb-3 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">info</span> 사이트 소개 (About Us)</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-2">Poke-Stock Tracker는 전국 단위 포켓몬 카드 수집가들을 위한 실시간 오프라인 재고 통합 조회 대시보드입니다.</p>
+      </section>
+      <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <h2 class="text-base font-bold mb-3 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">policy</span> 개인정보처리방침 (Privacy Policy)</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Google 등 제3자 공급업체는 쿠키를 사용하여 사용자의 이전 방문 기록 기반 광고를 게재합니다.</p>
+      </section>
+    </article>
   </main>
-
-  <footer class="text-center py-6 text-xs text-gray-400 dark:text-gray-500 mt-auto">
-    <p>&copy; 2026 Poke-Stock Tracker. All rights reserved.</p>
-  </footer>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Theme Toggle
-      const themeBtn = document.getElementById('theme-toggle');
-      themeBtn.addEventListener('click', () => {
+      document.getElementById('theme-toggle').addEventListener('click', () => {
         document.documentElement.classList.toggle('dark');
       });
 
-      // 2. Mock Data (데이터 연동 방식에 맞게 구조화)
-      const stores = [
-        {
-          id: 1,
-          category: '공인샵',
-          categoryColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-          name: '용산 아이파크몰 카드샵',
-          region: '용산',
-          description: '썬앤문 베이스세트 및 신규 팩 대량 입고 확인!',
-          status: 'plenty',
-          statusText: '넉넉함',
-          statusIcon: '🟢',
-          statusColor: 'text-green-600 dark:text-green-400',
-          time: '10분 전'
-        },
-        {
-          id: 2,
-          category: '편의점',
-          categoryColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
-          name: 'GS25 부천역점',
-          region: '부천',
-          description: '이브이 히어로즈 3팩 남았습니다.',
-          status: 'low',
-          statusText: '소량 남음',
-          statusIcon: '🟡',
-          statusColor: 'text-yellow-600 dark:text-yellow-400',
-          time: '35분 전'
-        },
-        {
-          id: 3,
-          category: '자판기',
-          categoryColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
-          name: '인천공항 제1터미널 자판기',
-          region: '인천',
-          description: '인기팩 전부 털렸습니다. 빈 박스만 있음.',
-          status: 'soldout',
-          statusText: '품절',
-          statusIcon: '🔴',
-          statusColor: 'text-red-600 dark:text-red-400',
-          time: '1시간 전'
-        },
-        {
-          id: 4,
-          category: '대형마트',
-          categoryColor: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
-          name: '이마트 영등포점',
-          region: '영등포',
-          description: '완구코너 매대 꽉 차있습니다.',
-          status: 'plenty',
-          statusText: '넉넉함',
-          statusIcon: '🟢',
-          statusColor: 'text-green-600 dark:text-green-400',
-          time: '3시간 전'
-        },
-        {
-          id: 5,
-          category: '공인샵',
-          categoryColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-          name: '홍대 AK플라자 카드샵',
-          region: '홍대',
-          description: '오늘 입고분 전량 소진되었습니다.',
-          status: 'soldout',
-          statusText: '품절',
-          statusIcon: '🔴',
-          statusColor: 'text-red-600 dark:text-red-400',
-          time: '5시간 전'
-        }
-      ];
+      let stores = []; // 외부에서 데이터를 받아올 빈 배열
+
+      const catColors = {
+        '공인샵': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+        '편의점': 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+        '자판기': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+        '대형마트': 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+      };
+      
+      const statColors = {
+        'plenty': 'text-green-600 dark:text-green-400',
+        'low': 'text-yellow-600 dark:text-yellow-400',
+        'soldout': 'text-red-600 dark:text-red-400'
+      };
 
       const listContainer = document.getElementById('store-list');
       const searchInput = document.getElementById('search-input');
       const categoryBtns = document.querySelectorAll('.btn-category');
       const noResultsMsg = document.getElementById('no-results');
+      const resultCountEl = document.getElementById('result-count');
+      const loadingSpinner = document.getElementById('loading-spinner');
       
       let currentCategory = 'all';
       let currentSearchQuery = '';
 
-      // 3. 렌더링 함수
       const renderList = () => {
-        listContainer.innerHTML = ''; // 초기화
+        listContainer.innerHTML = ''; 
         
-        // 필터링 로직
         const filteredStores = stores.filter(store => {
           const matchCategory = currentCategory === 'all' || store.category === currentCategory;
           const matchSearch = store.name.includes(currentSearchQuery) || store.region.includes(currentSearchQuery);
           return matchCategory && matchSearch;
         });
 
+        resultCountEl.textContent = filteredStores.length;
+
         if (filteredStores.length === 0) {
           noResultsMsg.classList.remove('hidden');
         } else {
           noResultsMsg.classList.add('hidden');
           
-          filteredStores.forEach(store => {
+          // 성능 최적화: 검색 결과가 너무 많을 경우 상위 100개만 렌더링 (브라우저 멈춤 방지)
+          const displayStores = filteredStores.slice(0, 100);
+          
+          displayStores.forEach(store => {
             const cardHTML = `
-              <article class="bg-white dark:bg-cardDark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-transform hover:scale-[1.01]">
+              <article class="bg-white dark:bg-cardDark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
                 <div class="flex justify-between items-start">
                   <div class="flex-1 pr-2">
-                    <span class="inline-block text-[10px] font-bold px-2 py-1 rounded mb-2 ${store.categoryColor}">${store.category}</span>
+                    <span class="inline-block text-[10px] font-bold px-2 py-1 rounded mb-2 ${catColors[store.category]}">${store.category}</span>
                     <h3 class="font-bold text-base dark:text-white">${store.name}</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${store.description}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">${store.region}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">${store.description}</p>
                   </div>
                   <div class="flex flex-col items-center justify-center shrink-0 w-16 h-16 bg-gray-50 dark:bg-[#1E2336] rounded-xl border border-gray-100 dark:border-gray-600">
                     <span class="text-2xl leading-none">${store.statusIcon}</span>
-                    <span class="text-[10px] font-bold mt-1 ${store.statusColor}">${store.statusText}</span>
+                    <span class="text-[10px] font-bold mt-1 ${statColors[store.status]}">${store.statusText}</span>
                   </div>
-                </div>
-                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-                  <span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> ${store.time}</span>
                 </div>
               </article>
             `;
@@ -255,26 +160,32 @@
         }
       };
 
-      // 4. 검색 이벤트 리스너
+      // 💡 핵심: 외부 stores.json 파일에서 데이터를 비동기로 불러옵니다.
+      fetch('stores.json')
+        .then(response => response.json())
+        .then(data => {
+          stores = data; // 불러온 데이터를 배열에 저장
+          loadingSpinner.classList.add('hidden');
+          renderList();
+        })
+        .catch(error => {
+          loadingSpinner.innerHTML = "데이터를 불러오는 데 실패했습니다.<br>stores.json 파일이 같은 폴더에 있는지 확인해주세요.";
+          console.error("데이터 로드 에러:", error);
+        });
+
       searchInput.addEventListener('input', (e) => {
         currentSearchQuery = e.target.value.trim();
         renderList();
       });
 
-      // 5. 카테고리 필터 이벤트 리스너
       categoryBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-          // 버튼 활성화 상태 변경
           categoryBtns.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          
           currentCategory = btn.getAttribute('data-category');
           renderList();
         });
       });
-
-      // 초기 렌더링
-      renderList();
     });
   </script>
 </body>
