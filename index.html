@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Poke-Stock Tracker | 실시간 포켓몬 카드 재고 공유</title>
+  <title>Poke-Stock Tracker | 실시간 포켓몬 카드 재고 추적기</title>
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="수집가들을 위한 오프라인 매장(공인샵, 자판기, 편의점, 마트) 실시간 포켓몬 카드 재고 공유 및 추적 대시보드입니다. 헛걸음 없이 효율적으로 카드를 수집하세요.">
+  <meta name="description" content="수집가들을 위한 오프라인 매장(공인샵, 자판기, 편의점, 마트) 포켓몬 카드 재고 확인 대시보드. 지역명으로 매장을 검색하고 실시간 재고를 확인하세요.">
   <meta name="keywords" content="포켓몬카드, 포카 재고, 자판기, 공인샵, 편의점, 대형마트, 실시간 재고, TCG">
   <meta name="author" content="Poke-Stock">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Tailwind Configuration for Dark Mode & Custom Colors -->
+  <!-- Tailwind Configuration -->
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            pokeRed: '#E3350D',
-            pokeDark: '#1F2937',
+            pokeRed: '#F05030', // 조금 더 밝고 경쾌한 레드
+            bgDark: '#1E2336',  // 다크모드 메인 배경색
+            cardDark: '#262D47', // 다크모드 카드 배경색
           }
         }
       }
@@ -32,23 +33,27 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   
   <style>
-    /* Custom Scrollbar for modern look */
+    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
     
-    /* Smooth transitions */
     body { transition: background-color 0.3s, color 0.3s; }
+
+    /* Category Button Active State */
+    .btn-category.active {
+      border-color: #F05030;
+      color: #F05030;
+      background-color: rgba(240, 80, 48, 0.1);
+    }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans antialiased pb-24">
+<body class="bg-gray-50 text-gray-800 dark:bg-bgDark dark:text-gray-100 font-sans antialiased pb-24 min-h-screen">
 
   <!-- Header -->
   <header class="bg-pokeRed text-white sticky top-0 z-40 shadow-md">
-    <div class="max-w-screen-md mx-auto px-4 py-3 flex justify-between items-center">
+    <div class="max-w-screen-md mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
-        <!-- Pokeball-like minimal icon -->
         <div class="w-6 h-6 rounded-full border-2 border-white bg-white flex items-center justify-center relative overflow-hidden">
           <div class="absolute top-0 left-0 w-full h-1/2 bg-pokeRed"></div>
           <div class="absolute w-full h-[2px] bg-gray-800 top-1/2 -translate-y-1/2"></div>
@@ -57,7 +62,7 @@
         <h1 class="text-xl font-bold tracking-tight">Poke-Stock</h1>
       </div>
       
-      <!-- Dark Mode Toggle -->
+      <!-- Theme Toggle -->
       <button id="theme-toggle" class="p-2 rounded-full hover:bg-white/20 transition">
         <span class="material-icons text-xl block dark:hidden">dark_mode</span>
         <span class="material-icons text-xl hidden dark:block">light_mode</span>
@@ -69,19 +74,19 @@
   <main class="max-w-screen-md mx-auto px-4 mt-6 space-y-6">
     
     <!-- Filter Section -->
-    <section aria-label="매장 카테고리 필터" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      <button class="flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-sm font-semibold shadow-sm hover:border-pokeRed text-pokeRed transition">전체보기</button>
-      <button class="flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:border-pokeRed transition">🏪 편의점</button>
-      <button class="flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:border-pokeRed transition">🏧 자판기</button>
-      <button class="flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:border-pokeRed transition">🏆 공인샵</button>
-      <button class="flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:border-pokeRed transition">🛒 대형마트</button>
+    <section aria-label="매장 카테고리 필터" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="category-filters">
+      <button data-category="all" class="btn-category active flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-semibold shadow-sm transition">전체보기</button>
+      <button data-category="편의점" class="btn-category flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition">🏪 편의점</button>
+      <button data-category="자판기" class="btn-category flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition">🏧 자판기</button>
+      <button data-category="공인샵" class="btn-category flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition">🏆 공인샵</button>
+      <button data-category="대형마트" class="btn-category flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition">🛒 대형마트</button>
     </section>
 
     <!-- Search Section -->
     <section aria-label="검색">
       <div class="relative">
         <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-        <input type="text" placeholder="지역명 또는 '썬앤문 베이스세트' 검색..." class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl py-3 pl-10 pr-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white transition">
+        <input type="text" id="search-input" placeholder="지역명 또는 매장명 검색 (예: 용산, GS25)..." class="w-full bg-white dark:bg-cardDark border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white transition">
       </div>
     </section>
 
@@ -92,254 +97,184 @@
         <span class="text-xs text-gray-500">최근 업데이트 순</span>
       </div>
 
-      <!-- Mock Card 1 -->
-      <article class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-        <div class="flex justify-between items-start">
-          <div class="flex-1 pr-2">
-            <span class="inline-block text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded mb-1">공인샵</span>
-            <h3 class="font-bold text-base dark:text-white">용산 아이파크몰 카드샵</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">썬앤문 베이스세트 및 신규 팩 대량 입고 확인!</p>
-          </div>
-          <div class="flex flex-col items-end shrink-0">
-            <div class="bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-lg flex flex-col items-center border border-gray-100 dark:border-gray-600">
-              <span class="text-xl leading-none">🟢</span>
-              <span class="text-[10px] font-bold mt-1 text-green-600 dark:text-green-400">넉넉함</span>
-            </div>
-          </div>
-        </div>
-        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-          <span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> 10분 전</span>
-          <span>제보자: 바이스</span>
-        </div>
-      </article>
-
-      <!-- Mock Card 2 -->
-      <article class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-        <div class="flex justify-between items-start">
-          <div class="flex-1 pr-2">
-            <span class="inline-block text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200 px-2 py-1 rounded mb-1">편의점</span>
-            <h3 class="font-bold text-base dark:text-white">GS25 부천역점</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">이브이 히어로즈 3팩 남았습니다.</p>
-          </div>
-          <div class="flex flex-col items-end shrink-0">
-            <div class="bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-lg flex flex-col items-center border border-gray-100 dark:border-gray-600">
-              <span class="text-xl leading-none">🟡</span>
-              <span class="text-[10px] font-bold mt-1 text-yellow-600 dark:text-yellow-400">소량 남음</span>
-            </div>
-          </div>
-        </div>
-        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-          <span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> 35분 전</span>
-          <span>제보자: 익명</span>
-        </div>
-      </article>
-
-      <!-- Mock Card 3 -->
-      <article class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-        <div class="flex justify-between items-start">
-          <div class="flex-1 pr-2">
-            <span class="inline-block text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 px-2 py-1 rounded mb-1">자판기</span>
-            <h3 class="font-bold text-base dark:text-white">인천공항 제1터미널 자판기</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">인기팩 전부 털렸습니다. 빈 박스만 있음.</p>
-          </div>
-          <div class="flex flex-col items-end shrink-0">
-            <div class="bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-lg flex flex-col items-center border border-gray-100 dark:border-gray-600">
-              <span class="text-xl leading-none">🔴</span>
-              <span class="text-[10px] font-bold mt-1 text-red-600 dark:text-red-400">품절</span>
-            </div>
-          </div>
-        </div>
-        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-          <span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> 1시간 전</span>
-          <span>제보자: 포카헌터</span>
-        </div>
-      </article>
+      <div id="store-list" class="space-y-4">
+        <!-- List will be populated by JavaScript -->
+      </div>
       
-      <!-- Mock Card 4 -->
-      <article class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-        <div class="flex justify-between items-start">
-          <div class="flex-1 pr-2">
-            <span class="inline-block text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded mb-1">대형마트</span>
-            <h3 class="font-bold text-base dark:text-white">이마트 영등포점</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">완구코너 매대 꽉 차있습니다.</p>
-          </div>
-          <div class="flex flex-col items-end shrink-0">
-            <div class="bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-lg flex flex-col items-center border border-gray-100 dark:border-gray-600">
-              <span class="text-xl leading-none">🟢</span>
-              <span class="text-[10px] font-bold mt-1 text-green-600 dark:text-green-400">넉넉함</span>
-            </div>
-          </div>
-        </div>
-        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-          <span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> 3시간 전</span>
-          <span>제보자: 익명</span>
-        </div>
-      </article>
-
-      <!-- Mock Card 5 -->
-      <article class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-        <div class="flex justify-between items-start">
-          <div class="flex-1 pr-2">
-            <span class="inline-block text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded mb-1">공인샵</span>
-            <h3 class="font-bold text-base dark:text-white">홍대 AK플라자 카드샵</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">오늘 입고분 전량 소진되었습니다.</p>
-          </div>
-          <div class="flex flex-col items-end shrink-0">
-            <div class="bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-lg flex flex-col items-center border border-gray-100 dark:border-gray-600">
-              <span class="text-xl leading-none">🔴</span>
-              <span class="text-[10px] font-bold mt-1 text-red-600 dark:text-red-400">품절</span>
-            </div>
-          </div>
-        </div>
-        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-          <span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> 5시간 전</span>
-          <span>제보자: 로켓단</span>
-        </div>
-      </article>
+      <!-- No Results Message -->
+      <div id="no-results" class="hidden text-center py-10 text-gray-500 dark:text-gray-400">
+        검색 결과가 없습니다.
+      </div>
     </section>
 
     <div class="py-6 border-b border-gray-200 dark:border-gray-700"></div>
 
     <!-- AdSense & SEO Content Sections -->
-    <section id="about" class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">info</span> 사이트 소개 (About)</h2>
+    <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">info</span> 서비스 안내</h2>
       <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-        Poke-Stock Tracker는 포켓몬 카드 수집가들의 헛걸음을 방지하기 위해 만들어진 집단지성 기반의 실시간 재고 추적 대시보드입니다. 오프라인 매장, 공인샵, 자판기, 편의점 등의 입고 상태를 유저들이 직접 공유하여 모두가 효율적으로 수집 생활을 즐길 수 있도록 돕는 유틸리티 플랫폼입니다.
+        Poke-Stock Tracker는 흩어져 있는 오프라인 매장(공인샵, 자판기, 편의점 등)의 포켓몬 카드 재고 데이터를 수집하여 한눈에 보여주는 대시보드입니다. 상단 필터와 검색 기능을 통해 원하는 지역의 매장을 빠르게 확인하세요.
       </p>
     </section>
 
-    <section id="guide" class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">help_outline</span> 사용 방법 (Guide)</h2>
-      <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-2 list-disc list-inside">
-        <li><strong>재고 확인:</strong> 상단 필터와 검색바를 통해 원하는 지역이나 팩 종류의 재고 현황을 파악하세요.</li>
-        <li><strong>제보 하기:</strong> 매장을 방문하셨다면 우측 하단의 <span class="inline-block bg-pokeRed text-white rounded-full w-4 h-4 text-center leading-4 text-[10px]">+</span> 버튼을 눌러주세요! 넉넉함(🟢), 소량(🟡), 품절(🔴) 상태를 10초 만에 쉽게 공유할 수 있습니다.</li>
-      </ul>
-    </section>
-
-    <section id="privacy" class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
-      <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">gavel</span> 개인정보처리방침 (Privacy Policy)</h2>
+    <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+      <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">gavel</span> 이용 주의사항</h2>
       <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-        본 사이트는 유저의 편의를 최우선으로 하며, 별도의 회원가입 없이 익명으로 작동합니다. 위치 정보, IP 주소 및 개인 식별 정보를 수집하거나 저장하지 않습니다. 안심하고 재고 정보를 공유해 주세요.
+        본 사이트에서 제공하는 데이터는 참고용이며, 실제 매장 방문 시점의 재고와 차이가 있을 수 있습니다. 정확한 재고는 방문 전 해당 매장에 문의하시는 것을 권장합니다.
       </p>
     </section>
 
   </main>
 
-  <!-- Footer -->
   <footer class="text-center py-6 text-xs text-gray-400 dark:text-gray-500 mt-auto">
     <p>&copy; 2026 Poke-Stock Tracker. All rights reserved.</p>
   </footer>
 
-  <!-- FAB (Floating Action Button) -->
-  <button id="fab-btn" class="fixed bottom-6 right-6 w-14 h-14 bg-pokeRed text-white rounded-full shadow-lg flex items-center justify-center hover:bg-red-700 hover:scale-105 active:scale-95 transition-all z-50">
-    <span class="material-icons text-3xl">add</span>
-  </button>
-
-  <!-- Report Modal -->
-  <div id="report-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
-    <div class="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden transform scale-100 transition-transform">
-      <!-- Modal Header -->
-      <div class="bg-pokeRed px-5 py-4 flex justify-between items-center text-white">
-        <h3 class="font-bold text-lg">새로운 재고 제보하기</h3>
-        <button id="close-modal" class="text-white/80 hover:text-white transition">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      
-      <!-- Modal Body -->
-      <div class="p-5 space-y-5">
-        <div>
-          <label class="block text-sm font-semibold mb-1 dark:text-gray-200">매장명 및 위치</label>
-          <input type="text" placeholder="예: 건대입구역 2번 출구 자판기" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white">
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold mb-2 dark:text-gray-200">상세 내용 (선택)</label>
-          <input type="text" placeholder="예: 고스트다이브, 이브이히어로즈 입고" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white">
-        </div>
-        
-        <div>
-          <label class="block text-sm font-semibold mb-2 dark:text-gray-200">현재 상태</label>
-          <div class="grid grid-cols-3 gap-2">
-            <!-- 🟢 -->
-            <label class="cursor-pointer">
-              <input type="radio" name="status" class="peer sr-only" value="plenty">
-              <div class="flex flex-col items-center p-2 rounded-xl border border-gray-200 dark:border-gray-600 peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:dark:bg-green-900/30 transition">
-                <span class="text-2xl mb-1">🟢</span>
-                <span class="text-xs font-bold text-gray-600 dark:text-gray-300">넉넉함</span>
-              </div>
-            </label>
-            <!-- 🟡 -->
-            <label class="cursor-pointer">
-              <input type="radio" name="status" class="peer sr-only" value="low">
-              <div class="flex flex-col items-center p-2 rounded-xl border border-gray-200 dark:border-gray-600 peer-checked:bg-yellow-50 peer-checked:border-yellow-500 peer-checked:dark:bg-yellow-900/30 transition">
-                <span class="text-2xl mb-1">🟡</span>
-                <span class="text-xs font-bold text-gray-600 dark:text-gray-300">소량</span>
-              </div>
-            </label>
-            <!-- 🔴 -->
-            <label class="cursor-pointer">
-              <input type="radio" name="status" class="peer sr-only" value="soldout">
-              <div class="flex flex-col items-center p-2 rounded-xl border border-gray-200 dark:border-gray-600 peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:dark:bg-red-900/30 transition">
-                <span class="text-2xl mb-1">🔴</span>
-                <span class="text-xs font-bold text-gray-600 dark:text-gray-300">품절</span>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <button id="submit-btn" class="w-full bg-pokeRed text-white font-bold rounded-xl py-3 shadow hover:bg-red-700 active:scale-[0.98] transition">
-          제보 완료
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- JavaScript for Interactions -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Dark Mode Toggle Logic
+      // 1. Theme Toggle
       const themeBtn = document.getElementById('theme-toggle');
-      
-      // Check system preference on load
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      }
-
       themeBtn.addEventListener('click', () => {
         document.documentElement.classList.toggle('dark');
       });
 
-      // Modal Logic
-      const modal = document.getElementById('report-modal');
-      const fab = document.getElementById('fab-btn');
-      const closeBtn = document.getElementById('close-modal');
-      const submitBtn = document.getElementById('submit-btn');
+      // 2. Mock Data (데이터 연동 방식에 맞게 구조화)
+      const stores = [
+        {
+          id: 1,
+          category: '공인샵',
+          categoryColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+          name: '용산 아이파크몰 카드샵',
+          region: '용산',
+          description: '썬앤문 베이스세트 및 신규 팩 대량 입고 확인!',
+          status: 'plenty',
+          statusText: '넉넉함',
+          statusIcon: '🟢',
+          statusColor: 'text-green-600 dark:text-green-400',
+          time: '10분 전'
+        },
+        {
+          id: 2,
+          category: '편의점',
+          categoryColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+          name: 'GS25 부천역점',
+          region: '부천',
+          description: '이브이 히어로즈 3팩 남았습니다.',
+          status: 'low',
+          statusText: '소량 남음',
+          statusIcon: '🟡',
+          statusColor: 'text-yellow-600 dark:text-yellow-400',
+          time: '35분 전'
+        },
+        {
+          id: 3,
+          category: '자판기',
+          categoryColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+          name: '인천공항 제1터미널 자판기',
+          region: '인천',
+          description: '인기팩 전부 털렸습니다. 빈 박스만 있음.',
+          status: 'soldout',
+          statusText: '품절',
+          statusIcon: '🔴',
+          statusColor: 'text-red-600 dark:text-red-400',
+          time: '1시간 전'
+        },
+        {
+          id: 4,
+          category: '대형마트',
+          categoryColor: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+          name: '이마트 영등포점',
+          region: '영등포',
+          description: '완구코너 매대 꽉 차있습니다.',
+          status: 'plenty',
+          statusText: '넉넉함',
+          statusIcon: '🟢',
+          statusColor: 'text-green-600 dark:text-green-400',
+          time: '3시간 전'
+        },
+        {
+          id: 5,
+          category: '공인샵',
+          categoryColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+          name: '홍대 AK플라자 카드샵',
+          region: '홍대',
+          description: '오늘 입고분 전량 소진되었습니다.',
+          status: 'soldout',
+          statusText: '품절',
+          statusIcon: '🔴',
+          statusColor: 'text-red-600 dark:text-red-400',
+          time: '5시간 전'
+        }
+      ];
 
-      const openModal = () => {
-        modal.classList.remove('hidden');
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
-      };
-
-      const closeModal = () => {
-        modal.classList.add('hidden');
-        document.body.style.overflow = '';
-      };
-
-      fab.addEventListener('click', openModal);
-      closeBtn.addEventListener('click', closeModal);
+      const listContainer = document.getElementById('store-list');
+      const searchInput = document.getElementById('search-input');
+      const categoryBtns = document.querySelectorAll('.btn-category');
+      const noResultsMsg = document.getElementById('no-results');
       
-      // Close on backdrop click
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
+      let currentCategory = 'all';
+      let currentSearchQuery = '';
+
+      // 3. 렌더링 함수
+      const renderList = () => {
+        listContainer.innerHTML = ''; // 초기화
+        
+        // 필터링 로직
+        const filteredStores = stores.filter(store => {
+          const matchCategory = currentCategory === 'all' || store.category === currentCategory;
+          const matchSearch = store.name.includes(currentSearchQuery) || store.region.includes(currentSearchQuery);
+          return matchCategory && matchSearch;
+        });
+
+        if (filteredStores.length === 0) {
+          noResultsMsg.classList.remove('hidden');
+        } else {
+          noResultsMsg.classList.add('hidden');
+          
+          filteredStores.forEach(store => {
+            const cardHTML = `
+              <article class="bg-white dark:bg-cardDark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-transform hover:scale-[1.01]">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1 pr-2">
+                    <span class="inline-block text-[10px] font-bold px-2 py-1 rounded mb-2 ${store.categoryColor}">${store.category}</span>
+                    <h3 class="font-bold text-base dark:text-white">${store.name}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${store.description}</p>
+                  </div>
+                  <div class="flex flex-col items-center justify-center shrink-0 w-16 h-16 bg-gray-50 dark:bg-[#1E2336] rounded-xl border border-gray-100 dark:border-gray-600">
+                    <span class="text-2xl leading-none">${store.statusIcon}</span>
+                    <span class="text-[10px] font-bold mt-1 ${store.statusColor}">${store.statusText}</span>
+                  </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                  <span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> ${store.time}</span>
+                </div>
+              </article>
+            `;
+            listContainer.insertAdjacentHTML('beforeend', cardHTML);
+          });
+        }
+      };
+
+      // 4. 검색 이벤트 리스너
+      searchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value.trim();
+        renderList();
       });
 
-      // Submit action (Mock)
-      submitBtn.addEventListener('click', () => {
-        alert('소중한 제보 감사합니다! 대시보드에 즉시 반영됩니다.');
-        closeModal();
+      // 5. 카테고리 필터 이벤트 리스너
+      categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          // 버튼 활성화 상태 변경
+          categoryBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          currentCategory = btn.getAttribute('data-category');
+          renderList();
+        });
       });
+
+      // 초기 렌더링
+      renderList();
     });
   </script>
 </body>
