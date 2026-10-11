@@ -52,14 +52,20 @@
       <button data-category="대형마트" class="btn-category flex-shrink-0 bg-white dark:bg-cardDark border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition">🛒 대형마트</button>
     </section>
 
-    <!-- 검색 및 상태 필터 섹션 -->
+    <!-- 검색, 내 위치, 상태 필터 섹션 -->
     <section aria-label="검색 및 필터" class="flex gap-2">
       <div class="relative flex-1">
         <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-        <!-- placeholder에서 신길파크자이점 제외 -->
-        <input type="text" id="search-input" placeholder="전국 시/군/구, 지역명 검색 (예: 신도림, 역삼)..." class="w-full h-full bg-white dark:bg-cardDark border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white transition text-sm">
+        <!-- 위치 버튼이 들어갈 공간 확보를 위해 pr-12 적용 -->
+        <input type="text" id="search-input" placeholder="전국 지역명 검색 (예: 신도림, 역삼)..." class="w-full h-full bg-white dark:bg-cardDark border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-12 shadow-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white transition text-sm">
+        
+        <!-- 내 위치 주변 찾기 버튼 -->
+        <button id="location-btn" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pokeRed transition p-1 rounded-full" title="내 위치 주변 찾기">
+          <span class="material-icons text-xl">my_location</span>
+        </button>
       </div>
-      <!-- 추가된 상태 필터 드롭다운 -->
+      
+      <!-- 상태 필터 드롭다운 -->
       <div class="relative flex-shrink-0 w-[110px]">
         <select id="status-filter" class="w-full h-full bg-white dark:bg-cardDark border border-gray-200 dark:border-gray-600 rounded-xl pl-3 pr-7 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-pokeRed/50 dark:text-white transition text-[13px] font-semibold appearance-none cursor-pointer">
           <option value="all">상태 전체</option>
@@ -99,12 +105,12 @@
       
       <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">help_outline</span> 사용 방법 (How to Use)</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">상단의 카테고리 필터를 통해 원하는 매장 타입을 선택하고, 검색창에 지역명이나 매장명을 입력하여 실시간 재고 상태를 확인하세요. 데이터는 매초 자동으로 갱신됩니다.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">상단의 카테고리 필터를 통해 원하는 매장 타입을 선택하고, 검색창에 지역명이나 매장명을 입력하여 실시간 재고 상태를 확인하세요. 우측 상단의 GPS 버튼을 누르면 내 주변 매장을 자동으로 찾아줍니다.</p>
       </section>
       
       <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <h2 class="text-base font-bold mb-2 flex items-center gap-2"><span class="material-icons text-pokeRed text-lg">policy</span> 개인정보처리방침 (Privacy Policy)</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Google 등 제3자 공급업체는 쿠키를 사용하여 사용자의 이전 방문 기록을 기반으로 맞춤 광고를 게재합니다. 사용자는 브라우저 설정을 통해 쿠키 사용을 거부할 수 있습니다.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Google 등 제3자 공급업체는 쿠키를 사용하여 사용자의 이전 방문 기록을 기반으로 맞춤 광고를 게재합니다. 사용자는 브라우저 설정을 통해 쿠키 사용을 거부할 수 있습니다. 위치 정보(GPS)는 기기 내부의 주변 매장 검색용으로만 일회성으로 사용되며 당사 서버에 저장되지 않습니다.</p>
       </section>
       
       <section class="bg-white dark:bg-cardDark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -253,7 +259,8 @@
 
       const listContainer = document.getElementById('store-list');
       const searchInput = document.getElementById('search-input');
-      const statusFilter = document.getElementById('status-filter'); // 상태 필터 DOM 추가
+      const statusFilter = document.getElementById('status-filter');
+      const locationBtn = document.getElementById('location-btn'); // 위치 버튼 DOM 추가
       const categoryBtns = document.querySelectorAll('.btn-category');
       const noResultsMsg = document.getElementById('no-results');
       const resultCountEl = document.getElementById('result-count');
@@ -261,7 +268,7 @@
       
       let currentCategory = 'all';
       let currentSearchQuery = '';
-      let currentStatus = 'all'; // 현재 상태값 추적 변수 추가
+      let currentStatus = 'all'; 
 
       const getTimeAgo = (timestamp) => {
         const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -277,10 +284,9 @@
         const filteredStores = stores.filter(store => {
           const matchCategory = currentCategory === 'all' || store.category === currentCategory;
           const matchSearch = store.name.includes(currentSearchQuery) || store.region.includes(currentSearchQuery);
-          // 상태 필터 매칭 로직 추가
           const matchStatus = currentStatus === 'all' || store.status === currentStatus;
           
-          return matchCategory && matchSearch && matchStatus; // 3개 조건 동시 충족
+          return matchCategory && matchSearch && matchStatus; 
         });
 
         listContainer.innerHTML = ''; 
@@ -351,10 +357,55 @@
         renderList();
       });
 
-      // 상태 필터 드롭다운 이벤트 리스너 추가
       statusFilter.addEventListener('change', (e) => {
         currentStatus = e.target.value;
         renderList();
+      });
+
+      // 내 위치 찾기 (OpenStreetMap Nominatim API 활용)
+      locationBtn.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+          alert('이 브라우저에서는 위치 기능을 지원하지 않습니다.');
+          return;
+        }
+
+        const icon = locationBtn.querySelector('.material-icons');
+        icon.classList.add('animate-spin'); 
+        icon.innerText = 'autorenew';
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              const { latitude, longitude } = position.coords;
+              const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+              const data = await res.json();
+              
+              // 시/군/구 추출 (우선순위: borough -> city -> county -> town)
+              const address = data.address;
+              const regionQuery = address.borough || address.city || address.county || address.town || '';
+              
+              if (regionQuery) {
+                searchInput.value = regionQuery;
+                currentSearchQuery = regionQuery;
+                renderList();
+                alert(`현재 위치('${regionQuery}') 주변으로 필터링되었습니다.`);
+              } else {
+                alert('현재 위치의 정확한 지역명을 파악할 수 없습니다.');
+              }
+            } catch (error) {
+              alert('위치 정보를 변환하는 중 오류가 발생했습니다.');
+            } finally {
+              icon.classList.remove('animate-spin');
+              icon.innerText = 'my_location';
+            }
+          },
+          (error) => {
+            alert('위치 접근 권한을 허용해주시거나 잠시 후 다시 시도해주세요.');
+            icon.classList.remove('animate-spin');
+            icon.innerText = 'my_location';
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
       });
 
       categoryBtns.forEach(btn => {
